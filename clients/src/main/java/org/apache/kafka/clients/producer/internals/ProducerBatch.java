@@ -19,7 +19,6 @@ package org.apache.kafka.clients.producer.internals;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.errors.RecordBatchTooLargeException;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.record.AbstractRecords;
 import org.apache.kafka.common.record.CompressionRatioEstimator;
@@ -45,7 +44,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.apache.kafka.common.record.RecordBatch.MAGIC_VALUE_V2;
-import static org.apache.kafka.common.record.RecordBatch.NO_TIMESTAMP;
 
 /**
  * A batch of records that is or will be sent.
@@ -275,9 +273,6 @@ public final class ProducerBatch {
         // Close the last batch and add it to the batch list after split.
         if (batch != null)
             batches.add(batch);
-
-        produceFuture.set(ProduceResponse.INVALID_OFFSET, NO_TIMESTAMP, new RecordBatchTooLargeException());
-        produceFuture.done();
 
         if (hasSequence()) {
             int sequence = baseSequence();

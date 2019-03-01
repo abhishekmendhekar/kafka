@@ -36,6 +36,7 @@ import org.apache.kafka.common.MetricName;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.errors.RecordBatchTooLargeException;
 import org.apache.kafka.common.errors.UnsupportedVersionException;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.metrics.Measurable;
@@ -51,11 +52,15 @@ import org.apache.kafka.common.record.MemoryRecordsBuilder;
 import org.apache.kafka.common.record.Record;
 import org.apache.kafka.common.record.RecordBatch;
 import org.apache.kafka.common.record.TimestampType;
+import org.apache.kafka.common.requests.ProduceResponse;
 import org.apache.kafka.common.utils.CopyOnWriteMap;
 import org.apache.kafka.common.utils.LogContext;
 import org.apache.kafka.common.utils.Time;
 import org.apache.kafka.common.utils.Utils;
 import org.slf4j.Logger;
+
+import static org.apache.kafka.common.record.RecordBatch.NO_TIMESTAMP;
+
 
 /**
  * This class acts as a queue that accumulates records into {@link MemoryRecords}
@@ -359,6 +364,10 @@ public final class RecordAccumulator {
                 }
             }
         }
+
+        // the bigBatch is split into smallers batches so mark the bigBatch future as complete
+        bigBatch.produceFuture.set(ProduceResponse.INVALID_OFFSET, NO_TIMESTAMP, new RecordBatchTooLargeException());
+        bigBatch.produceFuture.done();
         return numSplitBatches;
     }
 

@@ -176,6 +176,7 @@ public class ProducerBatchTest {
                 }
             }
             Deque<ProducerBatch> batches = batch.split(200);
+            assertFalse(batch.produceFuture.completed());
             assertTrue("This batch should be split to multiple small batches.", batches.size() >= 2);
 
             for (ProducerBatch splitProducerBatch : batches) {
